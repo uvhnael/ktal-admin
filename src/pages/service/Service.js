@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState } from "react";
 import { serviceAPI } from "../../services/api";
 import { usePagination, useAsyncApi } from "../../hooks/useApi";
 import {
@@ -76,7 +76,7 @@ const Service = () => {
 
       if (showEditForm && selectedService) {
         // Update service
-        formData.features = JSON.stringify(formData.features);
+        formData.features = stringToJsonArray(formData.features);
         await updateServiceAction(() =>
           serviceAPI.update(selectedService.id, formData)
         );
@@ -150,27 +150,6 @@ const Service = () => {
     setShowCreateForm(false);
     setShowEditForm(false);
     setSelectedService(null);
-  };
-
-  const formatPrice = (price) => {
-    // If price is already formatted or contains text, return as is
-    if (
-      typeof price === "string" &&
-      (price.includes("VNĐ") ||
-        price.includes("Liên hệ") ||
-        isNaN(price.replace(/[,.]/g, "")))
-    ) {
-      return price;
-    }
-    // Try to format as currency if it's a number
-    const numericPrice = parseFloat(price?.toString().replace(/[,.]/g, ""));
-    if (!isNaN(numericPrice)) {
-      return new Intl.NumberFormat("vi-VN", {
-        style: "currency",
-        currency: "VND",
-      }).format(numericPrice);
-    }
-    return price;
   };
 
   return (

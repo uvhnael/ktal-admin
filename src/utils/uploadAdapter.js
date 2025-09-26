@@ -25,7 +25,11 @@ export class UploadAdapter {
 
   _initRequest() {
     const xhr = (this.xhr = new XMLHttpRequest());
-    xhr.open("POST", `${process.env.REACT_APP_API_BASE_URL}/upload`, true);
+    xhr.open(
+      "POST",
+      `${process.env.REACT_APP_API_BASE_URL}/files/upload`,
+      true
+    );
     xhr.responseType = "json";
 
     // Add authorization header if token exists
@@ -43,7 +47,8 @@ export class UploadAdapter {
     xhr.addEventListener("error", () => reject(genericErrorText));
     xhr.addEventListener("abort", () => reject());
     xhr.addEventListener("load", () => {
-      const response = xhr.response;
+      const response = xhr.response.data;
+      console.log("Upload response:", response);
 
       if (!response || xhr.status !== 200) {
         return reject(

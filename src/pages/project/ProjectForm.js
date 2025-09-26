@@ -72,8 +72,11 @@ const ProjectForm = ({
       try {
         const response = await fileAPI.uploadImage(thumbnailFile);
         console.log("Thumbnail upload response:", response);
-        if (response && response.url) {
-          updatedFormData = { ...updatedFormData, thumbnail: response.url };
+        if (response.data && response.data.url) {
+          updatedFormData = {
+            ...updatedFormData,
+            thumbnail: response.data.url,
+          };
         }
       } catch (error) {
         console.error("Error uploading thumbnail:", error);

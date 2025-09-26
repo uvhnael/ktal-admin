@@ -220,7 +220,7 @@ export const fileAPI = {
   uploadImage: (file) => {
     const formData = new FormData();
     formData.append("upload", file);
-    return apiService.uploadFile("/upload", formData);
+    return apiService.uploadFile("/files/upload", formData);
   },
 
   // Upload multiple images
@@ -229,7 +229,7 @@ export const fileAPI = {
     files.forEach((file, index) => {
       formData.append(`images`, file);
     });
-    return apiService.uploadFile("/upload/multiple", formData);
+    return apiService.uploadFile("/files/upload/multiple", formData);
   },
 
   // Delete uploaded file
