@@ -5,7 +5,7 @@ import { CustomUploadAdapterPlugin } from "../../utils/uploadAdapter";
 import { fileAPI } from "../../services/api";
 import "../../styles/ckeditor-custom.css";
 
-const ProjectForm = ({
+const BlogForm = ({
   formData,
   setFormData,
   onSubmit,
@@ -21,6 +21,40 @@ const ProjectForm = ({
       setThumbnailPreview(formData.thumbnail);
     }
   }, [formData.thumbnail]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    let updatedFormData = { ...formData };
+
+    // Handle thumbnail upload if there's a new file
+    if (thumbnailFile) {
+      try {
+        const response = await fileAPI.uploadImage(thumbnailFile);
+        console.log("Thumbnail upload response:", response);
+        if (response && response.url) {
+          updatedFormData = { ...updatedFormData, thumbnail: response.url };
+        }
+      } catch (error) {
+        console.error("Error uploading thumbnail:", error);
+      }
+    }
+
+    // Pass the updated form data to parent's onSubmit
+    onSubmit(updatedFormData);
+  };
+
+  const handleThumbnailChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setThumbnailFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setThumbnailPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   // Function to generate slug from title
   const generateSlug = (title) => {
@@ -50,46 +84,12 @@ const ProjectForm = ({
     });
   };
 
-  const handleThumbnailChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setThumbnailFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setThumbnailPreview(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    let updatedFormData = { ...formData };
-
-    // Handle thumbnail upload if there's a new file
-    if (thumbnailFile) {
-      try {
-        const response = await fileAPI.uploadImage(thumbnailFile);
-        console.log("Thumbnail upload response:", response);
-        if (response && response.url) {
-          updatedFormData = { ...updatedFormData, thumbnail: response.url };
-        }
-      } catch (error) {
-        console.error("Error uploading thumbnail:", error);
-      }
-    }
-
-    // Pass the updated form data to parent's onSubmit
-    onSubmit(updatedFormData);
-  };
-
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
       <div className="relative top-5 mx-auto p-5 border w-[800px] shadow-lg rounded-md bg-white">
         <div className="mt-3">
           <h3 className="text-lg font-medium text-gray-900 mb-4">
-            {isEditing ? "Chỉnh sửa dự án" : "Thêm dự án mới"}
+            {isEditing ? "Chỉnh sửa bài viết" : "Thêm bài viết mới"}
           </h3>
           <form
             onSubmit={handleSubmit}
@@ -98,7 +98,7 @@ const ProjectForm = ({
             {/* Title */}
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Tiêu đề dự án *
+                Tiêu đề *
               </label>
               <input
                 type="text"
@@ -106,7 +106,7 @@ const ProjectForm = ({
                 value={formData.title}
                 onChange={handleTitleChange}
                 className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Nhập tiêu đề dự án"
+                placeholder="Nhập tiêu đề bài viết"
               />
             </div>
 
@@ -123,59 +123,42 @@ const ProjectForm = ({
                   setFormData({ ...formData, slug: e.target.value })
                 }
                 className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="slug-du-an"
+                placeholder="slug-bai-viet"
               />
               <p className="text-xs text-gray-500 mt-1">
                 Slug được tạo tự động từ tiêu đề, bạn có thể chỉnh sửa nếu cần
               </p>
             </div>
 
-            {/* Description */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Mô tả ngắn
-              </label>
-              <textarea
-                value={formData.description || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
-                rows={3}
-                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Nhập mô tả ngắn về dự án (tối đa 500 ký tự)"
-                maxLength={500}
-              />
-            </div>
-
-            {/* Year and Area */}
+            {/* Author and Category */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Năm thực hiện
+                  Tác giả *
                 </label>
                 <input
-                  type="number"
-                  min="2000"
-                  max="2050"
-                  value={formData.year || ""}
+                  type="text"
+                  required
+                  value={formData.author}
                   onChange={(e) =>
-                    setFormData({ ...formData, year: e.target.value })
+                    setFormData({ ...formData, author: e.target.value })
                   }
                   className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Tên tác giả"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Khu vực
+                  Danh mục
                 </label>
                 <input
                   type="text"
-                  value={formData.area || ""}
+                  value={formData.category || ""}
                   onChange={(e) =>
-                    setFormData({ ...formData, area: e.target.value })
+                    setFormData({ ...formData, category: e.target.value })
                   }
-                  placeholder="VD: Hà Nội, TP. Hồ Chí Minh, Đà Nẵng..."
                   className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Danh mục bài viết"
                 />
               </div>
             </div>
@@ -219,14 +202,14 @@ const ProjectForm = ({
                 )}
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                Ảnh đại diện cho dự án. Khuyến nghị tỷ lệ 16:9
+                Ảnh đại diện cho bài viết. Khuyến nghị tỷ lệ 16:9
               </p>
             </div>
 
             {/* Rich Content Editor */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Nội dung dự án
+                Nội dung *
               </label>
               <div className="border border-gray-300 rounded-md overflow-hidden">
                 <CKEditor
@@ -257,7 +240,7 @@ const ProjectForm = ({
                       "undo",
                       "redo",
                     ],
-                    placeholder: "Nhập nội dung chi tiết về dự án...",
+                    placeholder: "Nhập nội dung chi tiết của bài viết...",
                     image: {
                       toolbar: [
                         "imageTextAlternative",
@@ -326,8 +309,7 @@ const ProjectForm = ({
                 className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="draft">Bản nháp</option>
-                <option value="in_progress">Đang thực hiện</option>
-                <option value="completed">Hoàn thành</option>
+                <option value="published">Đã xuất bản</option>
                 <option value="archived">Đã lưu trữ</option>
               </select>
             </div>
@@ -356,4 +338,4 @@ const ProjectForm = ({
   );
 };
 
-export default ProjectForm;
+export default BlogForm;

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { projectAPI } from "../../services/api";
+import { blogAPI } from "../../services/api";
 import { usePagination, useAsyncApi } from "../../hooks/useApi";
 import {
   LoadingSpinner,
@@ -8,29 +8,29 @@ import {
   StatusBadge,
   ConfirmModal,
 } from "../../components/UI";
-import ProjectForm from "./ProjectForm";
+import BlogForm from "./BlogForm";
 
-const Project = () => {
+const Blog = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
-  const [selectedProject, setSelectedProject] = useState(null);
+  const [selectedBlog, setSelectedBlog] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [projectToDelete, setProjectToDelete] = useState(null);
+  const [blogToDelete, setBlogToDelete] = useState(null);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
 
   // API calls using custom hooks
   const {
-    data: projects,
+    data: blogs,
     loading,
     error,
     pagination,
     refetch,
     changePage,
-  } = usePagination(() => projectAPI.getAll());
+  } = usePagination(() => blogAPI.getAll());
 
-  const { execute: createProject, loading: creating } = useAsyncApi();
-  const { execute: updateProject, loading: updating } = useAsyncApi();
-  const { execute: deleteProject, loading: deleting } = useAsyncApi();
+  const { execute: createBlog, loading: creating } = useAsyncApi();
+  const { execute: updateBlog, loading: updating } = useAsyncApi();
+  const { execute: deleteBlog, loading: deleting } = useAsyncApi();
 
   // Generate a slug from a title
   const generateSlug = (title) => {
@@ -54,9 +54,8 @@ const Project = () => {
   const [formData, setFormData] = useState({
     title: "",
     slug: "",
-    description: "",
-    year: new Date().getFullYear().toString(),
-    area: "",
+    author: "",
+    category: "",
     thumbnail: "",
     content: "",
     status: "draft",
@@ -64,61 +63,59 @@ const Project = () => {
 
   const handleSubmit = async (updatedFormData) => {
     try {
+      // Use the updated form data that includes the thumbnail URL
       // Ensure slug is generated if empty
       const dataToSubmit = {
         ...updatedFormData,
         slug: updatedFormData.slug || generateSlug(updatedFormData.title),
       };
 
-      if (showEditForm && selectedProject) {
-        // Update project
-        await updateProject(() =>
-          projectAPI.update(selectedProject.id, dataToSubmit)
-        );
-        alert("Cập nhật dự án thành công!");
+      if (showEditForm && selectedBlog) {
+        // Update blog
+        await updateBlog(() => blogAPI.update(selectedBlog.id, dataToSubmit));
+        alert("Cập nhật bài viết thành công!");
       } else {
-        // Create new project
-        await createProject(() => projectAPI.create(dataToSubmit));
-        alert("Tạo dự án thành công!");
+        // Create new blog
+        await createBlog(() => blogAPI.create(dataToSubmit));
+        alert("Tạo bài viết thành công!");
       }
       refetch(); // Refresh data
       resetForm();
     } catch (error) {
-      console.error("Error saving project:", error);
-      alert("Có lỗi xảy ra khi lưu dự án");
+      console.error("Error saving blog:", error);
+      alert("Có lỗi xảy ra khi lưu bài viết");
     }
   };
 
-  const handleEdit = (project) => {
-    setSelectedProject(project);
+  const handleEdit = (blog) => {
+    setSelectedBlog(blog);
     setFormData({
-      title: project.title || "",
-      slug: project.slug || "",
-      description: project.description || "",
-      year: project.year || new Date().getFullYear().toString(),
-      area: project.area || "",
-      thumbnail: project.thumbnail || "",
-      content: project.content || "",
-      status: project.status || "draft",
+      title: blog.title || "",
+      slug: blog.slug || "",
+      author: blog.author || "",
+      category: blog.category || "",
+      thumbnail: blog.thumbnail || "",
+      content: blog.content || "",
+      status: blog.status || "draft",
     });
     setShowEditForm(true);
   };
 
-  const handleDeleteClick = (project) => {
-    setProjectToDelete(project);
+  const handleDeleteClick = (blog) => {
+    setBlogToDelete(blog);
     setShowDeleteModal(true);
   };
 
   const handleDeleteConfirm = async () => {
     try {
-      await deleteProject(() => projectAPI.delete(projectToDelete.id));
+      await deleteBlog(() => blogAPI.delete(blogToDelete.id));
       refetch(); // Refresh data
       setShowDeleteModal(false);
-      setProjectToDelete(null);
-      alert("Xóa dự án thành công!");
+      setBlogToDelete(null);
+      alert("Xóa bài viết thành công!");
     } catch (error) {
-      console.error("Error deleting project:", error);
-      alert("Có lỗi xảy ra khi xóa dự án");
+      console.error("Error deleting blog:", error);
+      alert("Có lỗi xảy ra khi xóa bài viết");
     }
   };
 
@@ -126,16 +123,15 @@ const Project = () => {
     setFormData({
       title: "",
       slug: "",
-      description: "",
-      year: new Date().getFullYear().toString(),
-      area: "",
+      author: "",
+      category: "",
       thumbnail: "",
       content: "",
       status: "draft",
     });
     setShowCreateForm(false);
     setShowEditForm(false);
-    setSelectedProject(null);
+    setSelectedBlog(null);
   };
 
   const stripHtmlTags = (html) => {
@@ -153,18 +149,17 @@ const Project = () => {
       : stripped;
   };
 
-  const handlePreview = (project) => {
-    setSelectedProject(project);
+  const handlePreview = (blog) => {
+    setSelectedBlog(blog);
     setShowPreviewModal(true);
   };
 
   const statusConfig = {
     draft: { text: "Bản nháp", className: "bg-gray-100 text-gray-800" },
-    in_progress: {
-      text: "Đang thực hiện",
-      className: "bg-blue-100 text-blue-800",
+    published: {
+      text: "Đã xuất bản",
+      className: "bg-green-100 text-green-800",
     },
-    completed: { text: "Hoàn thành", className: "bg-green-100 text-green-800" },
     archived: {
       text: "Đã lưu trữ",
       className: "bg-yellow-100 text-yellow-800",
@@ -176,9 +171,9 @@ const Project = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Quản lý dự án</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Quản lý bài viết</h1>
           <p className="text-gray-600 mt-2">
-            Quản lý các dự án kiến trúc và xây dựng
+            Quản lý bài viết và tin tức trên blog
           </p>
         </div>
         <button
@@ -198,7 +193,7 @@ const Project = () => {
               d="M12 6v6m0 0v6m0-6h6m-6 0H6"
             />
           </svg>
-          <span>Thêm dự án</span>
+          <span>Thêm bài viết</span>
         </button>
       </div>
 
@@ -208,13 +203,13 @@ const Project = () => {
       )}
 
       {/* Preview Modal */}
-      {showPreviewModal && selectedProject && (
+      {showPreviewModal && selectedBlog && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
           <div className="relative top-5 mx-auto p-5 border w-[900px] shadow-lg rounded-md bg-white">
             <div className="mt-3">
               <div className="flex justify-between items-start mb-4">
                 <h3 className="text-xl font-semibold text-gray-900">
-                  {selectedProject.title}
+                  {selectedBlog.title}
                 </h3>
                 <button
                   onClick={() => setShowPreviewModal(false)}
@@ -237,71 +232,63 @@ const Project = () => {
               </div>
 
               <div className="max-h-[70vh] overflow-y-auto space-y-4">
-                {/* Project Info */}
+                {/* Blog Info */}
                 <div className="grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
                   <div>
-                    <strong>Năm thực hiện:</strong> {selectedProject.year}
+                    <strong>Tác giả:</strong> {selectedBlog.author}
                   </div>
                   <div>
-                    <strong>Khu vực:</strong> {selectedProject.area || "-"}
+                    <strong>Danh mục:</strong> {selectedBlog.category || "-"}
                   </div>
                   <div>
                     <strong>Trạng thái:</strong>
                     <StatusBadge
-                      status={selectedProject.status}
+                      status={selectedBlog.status}
                       statusConfig={statusConfig}
                       className="ml-2"
                     />
                   </div>
                   <div>
-                    <strong>Slug:</strong> {selectedProject.slug || "-"}
+                    <strong>Slug:</strong> {selectedBlog.slug}
                   </div>
-                  {selectedProject.created_at && (
+                  {selectedBlog.created_at && (
                     <div>
                       <strong>Ngày tạo:</strong>{" "}
-                      {new Date(selectedProject.created_at).toLocaleDateString(
+                      {new Date(selectedBlog.created_at).toLocaleDateString(
                         "vi-VN"
                       )}
                     </div>
                   )}
-                  {selectedProject.updated_at && (
+                  {selectedBlog.updated_at && (
                     <div>
                       <strong>Cập nhật:</strong>{" "}
-                      {new Date(selectedProject.updated_at).toLocaleDateString(
+                      {new Date(selectedBlog.updated_at).toLocaleDateString(
                         "vi-VN"
                       )}
                     </div>
                   )}
                 </div>
 
-                {/* Description if available */}
-                {selectedProject.description && (
-                  <div className="p-4 bg-gray-50 rounded-lg">
-                    <h4 className="text-lg font-medium mb-2">Mô tả</h4>
-                    <p>{selectedProject.description}</p>
-                  </div>
-                )}
-
                 {/* Thumbnail if available */}
-                {selectedProject.thumbnail && (
+                {selectedBlog.thumbnail && (
                   <div>
                     <h4 className="text-lg font-medium mb-2">Ảnh đại diện</h4>
                     <img
-                      src={selectedProject.thumbnail}
-                      alt={selectedProject.title}
+                      src={selectedBlog.thumbnail}
+                      alt={selectedBlog.title}
                       className="max-w-full h-auto rounded-lg border border-gray-200"
                     />
                   </div>
                 )}
 
                 {/* Rich Content */}
-                {selectedProject.content && (
+                {selectedBlog.content && (
                   <div>
-                    <h4 className="text-lg font-medium mb-2">Nội dung dự án</h4>
+                    <h4 className="text-lg font-medium mb-2">Nội dung</h4>
                     <div
                       className="prose max-w-none border border-gray-200 rounded-lg p-4 bg-white"
                       dangerouslySetInnerHTML={{
-                        __html: selectedProject.content,
+                        __html: selectedBlog.content,
                       }}
                     />
                   </div>
@@ -326,15 +313,15 @@ const Project = () => {
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
         onConfirm={handleDeleteConfirm}
-        title="Xác nhận xóa dự án"
-        message={`Bạn có chắc chắn muốn xóa dự án "${projectToDelete?.name}"? Hành động này không thể hoàn tác.`}
+        title="Xác nhận xóa bài viết"
+        message={`Bạn có chắc chắn muốn xóa bài viết "${blogToDelete?.title}"? Hành động này không thể hoàn tác.`}
         confirmText="Xóa"
         type="danger"
       />
 
       {/* Create/Edit Form Modal */}
       {(showCreateForm || showEditForm) && (
-        <ProjectForm
+        <BlogForm
           formData={formData}
           setFormData={setFormData}
           onSubmit={handleSubmit}
@@ -344,15 +331,15 @@ const Project = () => {
         />
       )}
 
-      {/* Projects List */}
+      {/* Blogs List */}
       <div className="bg-white shadow-md rounded-lg overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900">
-            Danh sách dự án
+            Danh sách bài viết
           </h2>
         </div>
         {loading ? (
-          <LoadingSpinner text="Đang tải dự án..." />
+          <LoadingSpinner text="Đang tải bài viết..." />
         ) : (
           <>
             <div className="overflow-x-auto">
@@ -360,13 +347,13 @@ const Project = () => {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Tiêu đề dự án
+                      Tiêu đề
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Năm thực hiện
+                      Tác giả
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Khu vực
+                      Danh mục
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Trạng thái
@@ -380,49 +367,47 @@ const Project = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {projects?.map((project) => (
-                    <tr key={project.id} className="hover:bg-gray-50">
+                  {blogs?.map((blog) => (
+                    <tr key={blog.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4">
                         <div className="flex items-center space-x-3">
-                          {project.thumbnail && (
+                          {blog.thumbnail && (
                             <img
-                              src={project.thumbnail}
-                              alt={project.title}
+                              src={blog.thumbnail}
+                              alt={blog.title}
                               className="w-12 h-12 object-cover rounded-md"
                             />
                           )}
                           <div>
                             <div className="font-medium text-gray-900">
-                              {project.title}
+                              {blog.title}
                             </div>
-                            {project.description && (
-                              <div className="text-xs text-gray-400 mt-1 max-w-xs">
-                                {truncateText(project.description, 50)}
-                              </div>
-                            )}
+                            <div className="text-xs text-gray-500">
+                              {blog.slug}
+                            </div>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900 font-medium">
-                          {project.year || "-"}
+                        <div className="text-sm text-gray-500">
+                          {blog.author}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-500">
-                          {project.area || "-"}
+                          {blog.category || "-"}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <StatusBadge
-                          status={project.status}
+                          status={blog.status}
                           statusConfig={statusConfig}
                         />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-500">
-                          {project.created_at
-                            ? new Date(project.created_at).toLocaleDateString(
+                          {blog.created_at
+                            ? new Date(blog.created_at).toLocaleDateString(
                                 "vi-VN"
                               )
                             : ""}
@@ -430,20 +415,20 @@ const Project = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                         <button
-                          onClick={() => handlePreview(project)}
+                          onClick={() => handlePreview(blog)}
                           className="text-green-600 hover:text-green-900"
                         >
                           Xem
                         </button>
                         <button
-                          onClick={() => handleEdit(project)}
+                          onClick={() => handleEdit(blog)}
                           disabled={creating || updating || deleting}
                           className="text-blue-600 hover:text-blue-900 disabled:opacity-50"
                         >
                           Sửa
                         </button>
                         <button
-                          onClick={() => handleDeleteClick(project)}
+                          onClick={() => handleDeleteClick(blog)}
                           disabled={creating || updating || deleting}
                           className="text-red-600 hover:text-red-900 disabled:opacity-50"
                         >
@@ -465,4 +450,4 @@ const Project = () => {
   );
 };
 
-export default Project;
+export default Blog;

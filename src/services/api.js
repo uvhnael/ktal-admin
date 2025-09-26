@@ -97,6 +97,13 @@ export const apiService = {
   },
 };
 
+export const dashboardAPI = {
+  getRecentActivities: () => apiService.get("/dashboard/recent-activities"),
+  getOverview: () => apiService.get("/dashboard/overview"),
+  getContentStatistics: () => apiService.get("/dashboard/content-statistics"),
+  getContactAnalysis: () => apiService.get("/dashboard/contact-analysis"),
+};
+
 // Admin specific API calls
 export const adminAPI = {
   // Auth
@@ -173,6 +180,22 @@ export const serviceAPI = {
   delete: (id) => apiService.delete(`/services/${id}`),
   updateStatus: (id, status) =>
     apiService.put(`/services/${id}/status`, { status }),
+};
+
+// Blog API for admin
+export const blogAPI = {
+  getAll: (params) => {
+    const queryString = params
+      ? `?${new URLSearchParams(params).toString()}`
+      : "";
+    return apiService.get(`/blogs${queryString}`);
+  },
+  getById: (id) => apiService.get(`/blogs/${id}`),
+  create: (data) => apiService.post("/blogs", data),
+  update: (id, data) => apiService.put(`/blogs/${id}`, data),
+  delete: (id) => apiService.delete(`/blogs/${id}`),
+  updateStatus: (id, status) =>
+    apiService.put(`/blogs/${id}/status`, { status }),
 };
 
 // User API for admin

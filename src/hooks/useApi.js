@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 
 // Custom hook để handle API calls
 export const useApi = (apiFunction, dependencies = []) => {
@@ -11,9 +11,11 @@ export const useApi = (apiFunction, dependencies = []) => {
       setLoading(true);
       setError(null);
       const result = await apiFunction();
-      setData(result);
+      setData(result.data || result);
     } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Something went wrong');
+      setError(
+        err.response?.data?.message || err.message || "Something went wrong"
+      );
     } finally {
       setLoading(false);
     }
@@ -36,9 +38,10 @@ export const useAsyncApi = () => {
       setLoading(true);
       setError(null);
       const result = await apiFunction();
-      return result;
+      return result.data || result;
     } catch (err) {
-      const errorMessage = err.response?.data?.message || err.message || 'Something went wrong';
+      const errorMessage =
+        err.response?.data?.message || err.message || "Something went wrong";
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -62,42 +65,51 @@ export const usePagination = (apiFunction, initialParams = {}) => {
   const [error, setError] = useState(null);
   const [params, setParams] = useState(initialParams);
 
-  const fetchData = useCallback(async (newParams = {}) => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const finalParams = { ...params, ...newParams };
-      const result = await apiFunction(finalParams);
-      
-      setData(result.data || result);
-      setPagination(result.pagination || {
-        page: finalParams.page || 1,
-        limit: finalParams.limit || 10,
-        total: result.total || 0,
-        totalPages: Math.ceil((result.total || 0) / (finalParams.limit || 10)),
-      });
-    } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Something went wrong');
-    } finally {
-      setLoading(false);
-    }
-  }, [apiFunction]);
+  const fetchData = useCallback(
+    async (newParams = {}) => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const finalParams = { ...params, ...newParams };
+        const result = await apiFunction(finalParams);
+
+        setData(result.data || result);
+        setPagination(
+          result.pagination || {
+            page: finalParams.page || 1,
+            limit: finalParams.limit || 10,
+            total: result.total || 0,
+            totalPages: Math.ceil(
+              (result.total || 0) / (finalParams.limit || 10)
+            ),
+          }
+        );
+      } catch (err) {
+        setError(
+          err.response?.data?.message || err.message || "Something went wrong"
+        );
+      } finally {
+        setLoading(false);
+      }
+    },
+    [apiFunction]
+  );
 
   useEffect(() => {
     fetchData(params);
   }, [params.page, params.limit]);
 
   const changePage = (page) => {
-    setParams(prev => ({ ...prev, page }));
+    setParams((prev) => ({ ...prev, page }));
   };
 
   const changeLimit = (limit) => {
-    setParams(prev => ({ ...prev, limit, page: 1 }));
+    setParams((prev) => ({ ...prev, limit, page: 1 }));
   };
 
   const updateParams = (newParams) => {
-    setParams(prev => ({ ...prev, ...newParams, page: 1 }));
+    setParams((prev) => ({ ...prev, ...newParams, page: 1 }));
   };
 
   const refetch = useCallback(() => {
@@ -125,24 +137,25 @@ export const useFormApi = (apiFunction, onSuccess, onError) => {
     try {
       setLoading(true);
       setErrors({});
-      
+
       const result = await apiFunction(formData);
-      
+
       if (onSuccess) {
-        onSuccess(result);
+        onSuccess(result.data || result);
       }
-      
-      return result;
+
+      return result.data || result;
     } catch (err) {
-      const errorMessage = err.response?.data?.message || err.message || 'Something went wrong';
+      const errorMessage =
+        err.response?.data?.message || err.message || "Something went wrong";
       const fieldErrors = err.response?.data?.errors || {};
-      
+
       setErrors(fieldErrors);
-      
+
       if (onError) {
         onError(errorMessage, fieldErrors);
       }
-      
+
       throw new Error(errorMessage);
     } finally {
       setLoading(false);
@@ -154,7 +167,7 @@ export const useFormApi = (apiFunction, onSuccess, onError) => {
 
 // Custom hook cho search/filter
 export const useSearch = (apiFunction, debounceMs = 500) => {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -172,7 +185,7 @@ export const useSearch = (apiFunction, debounceMs = 500) => {
         const result = await apiFunction(searchQuery);
         setResults(result.data || result);
       } catch (err) {
-        setError(err.response?.data?.message || err.message || 'Search failed');
+        setError(err.response?.data?.message || err.message || "Search failed");
       } finally {
         setLoading(false);
       }
